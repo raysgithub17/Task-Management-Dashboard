@@ -4,11 +4,13 @@ A simple task board built with **React** and **TypeScript**. You can add, edit, 
 
 ## Live demo
 
-**Try the built app (GitHub Pages):** **[https://raysgithub17.github.io/Task-Management-Dashboard/](https://raysgithub17.github.io/Task-Management-Dashboard/)**
+**Production (Netlify):** **[https://task-management-app-rayhan.netlify.app/](https://task-management-app-rayhan.netlify.app/)**
 
-This site is published automatically when you push to `main`, using [GitHub Actions](.github/workflows/deploy-github-pages.yml). **One-time setup:** in the GitHub repo go to **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**, then open the **Actions** tab and confirm the “Deploy to GitHub Pages” workflow has completed (it may take a minute after the first push).
+This is the main hosted build. Netlify uses [`netlify.toml`](netlify.toml): `npm run build`, output folder `dist`, and SPA redirects so refreshes keep working.
 
-**Host on Netlify instead (or as well):** use the button below to import this repo. Build command `npm run build`, publish directory `dist` (already set in [`netlify.toml`](netlify.toml)). After setup, your URL will look like `https://your-site-name.netlify.app`.
+**GitHub Pages (optional mirror):** **[https://raysgithub17.github.io/Task-Management-Dashboard/](https://raysgithub17.github.io/Task-Management-Dashboard/)** — deploys from `main` via [GitHub Actions](.github/workflows/deploy-github-pages.yml). **One-time setup:** **Settings → Pages → Source: GitHub Actions**, then wait for the workflow in the **Actions** tab.
+
+**Deploy your own Netlify copy** (same repo):
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/raysgithub17/Task-Management-Dashboard)
 
