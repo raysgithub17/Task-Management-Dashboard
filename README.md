@@ -4,15 +4,7 @@ A simple task board built with **React** and **TypeScript**. You can add, edit, 
 
 ## Live demo
 
-**Production (Netlify):** **[https://task-management-app-rayhan.netlify.app/](https://task-management-app-rayhan.netlify.app/)**
-
-This is the main hosted build. Netlify uses [`netlify.toml`](netlify.toml): `npm run build`, output folder `dist`, and SPA redirects so refreshes keep working.
-
-**GitHub Pages (optional mirror):** **[https://raysgithub17.github.io/Task-Management-Dashboard/](https://raysgithub17.github.io/Task-Management-Dashboard/)** — deploys from `main` via [GitHub Actions](.github/workflows/deploy-github-pages.yml). **One-time setup:** **Settings → Pages → Source: GitHub Actions**, then wait for the workflow in the **Actions** tab.
-
-**Deploy your own Netlify copy** (same repo):
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/raysgithub17/Task-Management-Dashboard)
+**Production:** **[https://task-management-app-rayhan.netlify.app/](https://task-management-app-rayhan.netlify.app/)**
 
 ---
 
@@ -160,7 +152,7 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
    Tasks and theme choice are stored only in **`localStorage`**. The app runs entirely in the browser—good for a demo or personal use. Sharing data between devices would need a server or cloud sync later.
 
 9. **Static hosting**  
-   The production build is plain HTML/CSS/JS in `dist/`, so it can be served from **GitHub Pages** (with a subpath base path for this repo) or **Netlify** (root path; `netlify.toml` + `public/_redirects` handle client-side routing for refreshes).
+   The production build is plain HTML/CSS/JS in `dist/`. [`netlify.toml`](netlify.toml) and [`public/_redirects`](public/_redirects) configure the Netlify deploy (build command, output folder, and SPA routing so refreshes keep working).
 
 ---
 
@@ -194,8 +186,7 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
 | Command | What it does |
 |---------|----------------|
 | `npm run dev` | Start the dev server with live reload |
-| `npm run build` | Typecheck + build static files to `dist/` (for Netlify, `npm run preview`, etc.) |
-| `npm run build:gh-pages` | Same as build, but with the correct **base path** for GitHub Pages |
+| `npm run build` | Typecheck + build static files to `dist/` |
 | `npm run preview` | Serve `dist/` locally |
 | `npm run lint` | Run ESLint |
 
