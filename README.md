@@ -2,12 +2,23 @@
 
 A simple task board built with **React** and **TypeScript**. You can add, edit, and delete tasks; search and filter them; switch between list and card views; use light or dark mode; and your data is saved in the **browser** (no server required).
 
+## Live demo
+
+**Try the built app (GitHub Pages):** **[https://raysgithub17.github.io/Task-Management-Dashboard/](https://raysgithub17.github.io/Task-Management-Dashboard/)**
+
+This site is published automatically when you push to `main`, using [GitHub Actions](.github/workflows/deploy-github-pages.yml). **One-time setup:** in the GitHub repo go to **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**, then open the **Actions** tab and confirm the “Deploy to GitHub Pages” workflow has completed (it may take a minute after the first push).
+
+**Host on Netlify instead (or as well):** use the button below to import this repo. Build command `npm run build`, publish directory `dist` (already set in [`netlify.toml`](netlify.toml)). After setup, your URL will look like `https://your-site-name.netlify.app`.
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/raysgithub17/Task-Management-Dashboard)
+
 ---
 
 ## What you’ll find here
 
 | Topic | Section |
 |--------|---------|
+| Hosted app | [Live demo](#live-demo) |
 | How to install and run the app | [Setup](#setup) |
 | Pictures of the UI | [Screenshots](#screenshots) |
 | Why things are built this way | [Design decisions](#design-decisions) |
@@ -18,6 +29,7 @@ A simple task board built with **React** and **TypeScript**. You can add, edit, 
 
 ## Table of contents
 
+- [Live demo](#live-demo)
 - [What you’ll find here](#what-youll-find-here)
 - [Setup](#setup)
 - [Screenshots](#screenshots)
@@ -145,6 +157,9 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
 8. **No backend**  
    Tasks and theme choice are stored only in **`localStorage`**. The app runs entirely in the browser—good for a demo or personal use. Sharing data between devices would need a server or cloud sync later.
 
+9. **Static hosting**  
+   The production build is plain HTML/CSS/JS in `dist/`, so it can be served from **GitHub Pages** (with a subpath base path for this repo) or **Netlify** (root path; `netlify.toml` + `public/_redirects` handle client-side routing for refreshes).
+
 ---
 
 ## Technical stack
@@ -177,7 +192,8 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
 | Command | What it does |
 |---------|----------------|
 | `npm run dev` | Start the dev server with live reload |
-| `npm run build` | Typecheck + build static files to `dist/` |
+| `npm run build` | Typecheck + build static files to `dist/` (for Netlify, `npm run preview`, etc.) |
+| `npm run build:gh-pages` | Same as build, but with the correct **base path** for GitHub Pages |
 | `npm run preview` | Serve `dist/` locally |
 | `npm run lint` | Run ESLint |
 
