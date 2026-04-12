@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap');
+
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f7f8f9;
+  --surface: #ffffff;
+  --surface-elevated: #fafafa;
+  --text: #0d0d0f;
+  --text-muted: #6b6f76;
+  --border: #e6e7ea;
+  --border-strong: #d1d3d8;
+  --accent: #5e6ad2;
+  --accent-hover: #4f5abf;
+  --accent-soft: rgba(94, 106, 210, 0.12);
+  --danger: #e5484d;
+  --danger-soft: rgba(229, 72, 77, 0.12);
+  --success: #30a46c;
+  --success-soft: rgba(48, 164, 108, 0.12);
+  --warning: #f76b15;
+  --priority-low: #6b6f76;
+  --priority-med: #f76b15;
+  --priority-high: #e5484d;
+  --shadow: 0 1px 2px rgba(15, 15, 18, 0.04), 0 4px 12px rgba(15, 15, 18, 0.06);
+  --shadow-lg: 0 8px 28px rgba(15, 15, 18, 0.12);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #09090b;
+  --surface: #141417;
+  --surface-elevated: #1a1a1f;
+  --text: #f4f4f5;
+  --text-muted: #8e8e98;
+  --border: #27272c;
+  --border-strong: #3f3f46;
+  --accent: #7c83eb;
+  --accent-hover: #9399f0;
+  --accent-soft: rgba(124, 131, 235, 0.15);
+  --danger: #ff6369;
+  --danger-soft: rgba(255, 99, 105, 0.15);
+  --success: #4cc38a;
+  --success-soft: rgba(76, 195, 138, 0.15);
+  --warning: #ff9f45;
+  --priority-low: #8e8e98;
+  --priority-med: #ff9f45;
+  --priority-high: #ff6369;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text);
+    background-color: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
