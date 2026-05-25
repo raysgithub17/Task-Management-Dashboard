@@ -162,7 +162,7 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
    Values for “create” and “edit” live in the main dashboard component and are passed into the modals. That way opening “edit” always shows the latest task data and you don’t need extra effects to copy props into local state.
 
 6. **Filters behind a button**  
-   Status and priority filters open in a small panel when you click **Filter**, so the top bar stays short on phones and small tablets. A dot on the button hints when a filter is active.
+   Priority filters open in a small panel when you click **Filter**, so the top bar stays short on phones and small tablets. A dot on the button hints when a filter is active. Active vs completed work is split via the **Dashboard** / **Completed tasks** navigation.
 
 7. **Basic accessibility**  
    Dialogs use proper roles and labels, you can click the dimmed background to close, and **Escape** closes them. The search box has a label for screen readers even though it’s visually compact.
@@ -173,8 +173,8 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
 9. **Static hosting**  
    The production build is plain HTML/CSS/JS in `dist/`. [`netlify.toml`](netlify.toml) and [`public/_redirects`](public/_redirects) configure the Netlify deploy (build command, output folder, and SPA routing so refreshes keep working).
 
-10. **AI via dev proxy**  
-   Optional insights use `HF_ACCESS_TOKEN` only on the dev server: requests go to `/hf-api/...` and Vite forwards them to `https://router.huggingface.co` with the `Authorization` header. That keeps the token out of the browser build.
+10. **AI routing (dev + Netlify)**  
+   The browser calls relative `/hf-api/...`. **Locally**, Vite’s proxy forwards to `https://router.huggingface.co` and attaches `Bearer HF_ACCESS_TOKEN` from your `.env`. **On Netlify**, [`netlify/functions/hf-proxy.mjs`](netlify/functions/hf-proxy.mjs) does the same—the token stays in **Site configuration → Environment variables** as **`HF_ACCESS_TOKEN`** (never in the frontend bundle). Add the variable and **redeploy** after `netlify.toml` / redirects include the `/hf-api/* → hf-proxy` rule before the SPA `/* → index.html` rule.
 
 ---
 
@@ -195,11 +195,11 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
 - Task fields: **title**, **description**, **priority**, **due date**, and **done / not done**
 - **Create** tasks in a popup, **edit** in a popup, **delete** with a confirmation step
 - **Search** by title or description
-- **Filter** by status (all / pending / done) and by priority
+- **Filter** by priority
 - **List** or **card** layout
 - **Counters** for total, pending, and completed tasks
-- **AI overview** (dev): Hugging Face chat summarization and recommendations from your task list
-- **Enhance with AI** on create/edit: polish title and description (same Hugging Face proxy as insights)
+- **AI overview**: Hugging Face chat summarization and recommendations (needs `HF_ACCESS_TOKEN`; Vite proxy in dev, Netlify function [`hf-proxy`](netlify/functions/hf-proxy.mjs) in production)
+- **Enhance with AI** on create/edit: same routing as insights
 - **Light** and **dark** theme, remembered when you come back
 - Layout that works on **large and small** screens
 

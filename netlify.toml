@@ -2,6 +2,16 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  directory = "netlify/functions"
+
+# Hugging Face API proxy (needs HF_ACCESS_TOKEN in Netlify env). Must precede SPA fallback.
+[[redirects]]
+  from = "/hf-api/*"
+  to = "/.netlify/functions/hf-proxy?hfpath=:splat"
+  status = 200
+  force = true
+
 # SPA: send all routes to index.html (Vite single-page app)
 [[redirects]]
   from = "/*"
