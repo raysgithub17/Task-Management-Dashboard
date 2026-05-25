@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { Priority } from '../types/task'
+import { enhanceTaskTitleDescription } from '../lib/huggingfaceEnhance'
 import type { TaskFormValues } from '../lib/taskFormDefaults'
 
 const priorities: { value: Priority; label: string }[] = [
@@ -8,19 +10,42 @@ const priorities: { value: Priority; label: string }[] = [
 ]
 
 const fieldInputClass =
-  'w-full rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2.5 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]'
+  'w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3.5 py-2.5 text-sm outline-none transition placeholder:text-[var(--text-muted)] placeholder:opacity-75 focus:border-[var(--accent)] focus:ring-[3px] focus:ring-[var(--accent-soft)]'
 
-interface TaskFormFieldsProps {
+type TaskFormFieldsProps = Readonly<{
   values: TaskFormValues
   onChange: (values: TaskFormValues) => void
   idPrefix?: string
-}
+}>
 
 export function TaskFormFields({ values, onChange, idPrefix = '' }: TaskFormFieldsProps) {
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
   const p = idPrefix ? `${idPrefix}-` : ''
 
   const set = <K extends keyof TaskFormValues>(key: K, v: TaskFormValues[K]) => {
+    if (aiError) setAiError(null)
     onChange({ ...values, [key]: v })
+  }
+
+  const canEnhance = values.title.trim().length > 0 || values.description.trim().length > 0
+
+  const handleAiEnhance = async () => {
+    if (!canEnhance || aiBusy) return
+    setAiBusy(true)
+    setAiError(null)
+    try {
+      const next = await enhanceTaskTitleDescription(values.title, values.description)
+      onChange({ ...values, title: next.title, description: next.description })
+    } catch (e) {
+      const msg =
+        import.meta.env.DEV && e instanceof Error
+          ? e.message
+          : "Couldn’t enhance. Check your connection and try again."
+      setAiError(msg)
+    } finally {
+      setAiBusy(false)
+    }
   }
 
   return (
@@ -56,6 +81,27 @@ export function TaskFormFields({ values, onChange, idPrefix = '' }: TaskFormFiel
           rows={3}
           maxLength={2000}
         />
+      </div>
+      <div>
+        <button
+          type="button"
+          id={`${p}ai-enhance`}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent)_38%,var(--border))] bg-[var(--accent-soft)] px-4 py-2.5 text-xs font-semibold text-[var(--accent)] shadow-[var(--shadow)] transition hover:border-[var(--border-strong)] hover:bg-[color-mix(in_srgb,var(--accent-soft)_120%,transparent)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          disabled={!canEnhance || aiBusy}
+          aria-busy={aiBusy}
+          onClick={handleAiEnhance}
+        >
+          {aiBusy ? 'Enhancing…' : 'Enhance title & description with AI'}
+        </button>
+        {aiError ? (
+          <p
+            id={`${p}ai-enhance-error`}
+            role="alert"
+            className="mt-2 text-xs leading-snug text-[var(--danger)]"
+          >
+            {aiError}
+          </p>
+        ) : null}
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>

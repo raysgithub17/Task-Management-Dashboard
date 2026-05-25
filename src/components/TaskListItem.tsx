@@ -1,12 +1,13 @@
 import type { Task } from '../types/task'
 import { priorityBadgeClass } from '../lib/priorityStyles'
+import { TaskStatusDropdown } from './TaskStatusDropdown'
 
 function formatDueDate(iso: string): string {
   if (!iso) return '—'
   try {
     const d = new Date(iso + 'T12:00:00')
     return d.toLocaleDateString(undefined, {
-      month: 'short',
+      month: 'long',
       day: 'numeric',
       year: 'numeric',
     })
@@ -16,88 +17,110 @@ function formatDueDate(iso: string): string {
 }
 
 interface TaskListItemProps {
-  task: Task
-  onToggle: (id: string) => void
-  onEdit: (task: Task) => void
-  onDelete: (task: Task) => void
+  readonly task: Task
+  readonly onCompletedChange: (id: string, completed: boolean) => void
+  readonly onEdit: (task: Task) => void
+  readonly onDelete: (task: Task) => void
+  readonly onOpenDetails: (task: Task) => void
 }
 
-export function TaskListItem({ task, onToggle, onEdit, onDelete }: TaskListItemProps) {
-  const done = task.completed
+const priorityBarClass: Record<Task['priority'], string> = {
+  low: 'border-l-[var(--priority-low)]',
+  medium: 'border-l-[var(--priority-med)]',
+  high: 'border-l-[var(--priority-high)]',
+}
+
+export function TaskListItem({
+  task,
+  onCompletedChange,
+  onEdit,
+  onDelete,
+  onOpenDetails,
+}: Readonly<TaskListItemProps>) {
+  const openDetails = () => onOpenDetails(task)
 
   return (
-    <article
-      className={`flex flex-wrap items-stretch justify-between gap-3 gap-y-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 transition hover:border-[var(--border-strong)] ${done ? 'opacity-[0.72]' : ''}`}
-      aria-label={task.title}
+    <li
+      className={`group space-y-0 rounded-r-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition hover:shadow-[0_8px_30px_rgba(0,0,0,0.03)] ${priorityBarClass[task.priority]} border-l-4`}
     >
-      <div className="flex min-w-0 flex-1 gap-3.5">
-        <label className="group relative flex shrink-0 cursor-pointer pt-0.5">
-          <input
-            type="checkbox"
-            className="peer sr-only"
-            checked={task.completed}
-            onChange={() => onToggle(task.id)}
-            aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
-          />
-          <span
-            className="flex h-5 w-5 shrink-0 rounded border-2 border-[var(--border-strong)] transition peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent)] peer-checked:border-[var(--accent)] peer-checked:bg-[var(--accent)] peer-checked:shadow-[inset_0_0_0_2px_var(--surface)]"
-            aria-hidden
-          />
-        </label>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 gap-x-3">
-            <h3
-              className={`text-[1.05rem] font-semibold text-[var(--text)] transition ${done ? 'text-[var(--text-muted)] line-through' : ''}`}
-            >
-              {task.title}
-            </h3>
-            <span
-              className={`rounded px-1.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide ${priorityBadgeClass[task.priority]}`}
-            >
-              {task.priority}
-            </span>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div
+            role="button"
+            tabIndex={0}
+            className="min-w-0 cursor-pointer rounded-lg py-0.5 outline-none transition hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_40%,transparent)]"
+            onClick={openDetails}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                openDetails()
+              }
+            }}
+            aria-label={`View details: ${task.title}`}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 title={task.title} className="line-clamp-2 min-w-0 flex-1 text-sm font-bold leading-snug text-[var(--text)]">
+                {task.title}
+              </h3>
+              <span className={`shrink-0 ${priorityBadgeClass[task.priority]}`}>{task.priority}</span>
+            </div>
+            {task.description ? (
+              <p title={task.description} className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-[var(--text-muted)]">
+                {task.description}
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs italic text-[var(--text-muted)]">No description</p>
+            )}
           </div>
-          {task.description ? (
-            <p
-              className={`mt-1.5 text-sm leading-snug text-[var(--text-muted)] ${done ? 'line-through' : ''}`}
-            >
-              {task.description}
-            </p>
-          ) : (
-            <p className="mt-1.5 text-sm italic text-[var(--text-muted)]">No description</p>
-          )}
-          <div className="mt-2.5 flex flex-wrap items-center gap-2 gap-x-3">
-            <span className="text-xs font-medium text-[var(--text-muted)]">
-              Due {formatDueDate(task.dueDate)}
-            </span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[0.7rem] font-semibold ${
-                done
-                  ? 'bg-[var(--success-soft)] text-[var(--success)]'
-                  : 'bg-[var(--warning)] text-[#09090b]'
-              }`}
-            >
-              {done ? 'Completed' : 'Pending'}
-            </span>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[color-mix(in_srgb,var(--border)_88%,transparent)] pt-3 text-[11px] text-[var(--text-muted)]">
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-md text-left outline-none ring-[var(--accent)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openDetails()
+                }}
+              >
+                <svg
+                  className="h-3.5 w-3.5 shrink-0 opacity-85"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                {formatDueDate(task.dueDate)}
+              </button>
+              <TaskStatusDropdown variant="list" task={task} onCompletedChange={onCompletedChange} />
+            </div>
           </div>
         </div>
+
+        <div className="flex shrink-0 items-center gap-1 opacity-55 transition group-hover:opacity-100">
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs font-semibold text-[var(--text-muted)] transition hover:text-[var(--accent)]"
+            onClick={() => onEdit(task)}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs font-semibold text-[var(--danger)] transition hover:text-[color-mix(in_srgb,var(--danger)_85%,black)]"
+            onClick={() => onDelete(task)}
+          >
+            Delete
+          </button>
+        </div>
       </div>
-      <div className="flex shrink-0 items-start gap-1 max-[520px]:w-full max-[520px]:justify-end">
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold text-[var(--text-muted)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
-          onClick={() => onEdit(task)}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold text-[var(--text-muted)] transition hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-          onClick={() => onDelete(task)}
-        >
-          Delete
-        </button>
-      </div>
-    </article>
+    </li>
   )
 }

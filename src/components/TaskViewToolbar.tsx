@@ -1,13 +1,11 @@
 import { useEffect, useRef } from 'react'
-import type { PriorityFilter, StatusFilter } from '../types/task'
+import type { PriorityFilter } from '../types/task'
 
 type ViewMode = 'list' | 'card'
 
-interface TaskViewToolbarProps {
+type TaskViewToolbarProps = Readonly<{
   search: string
   onSearchChange: (v: string) => void
-  statusFilter: StatusFilter
-  onStatusFilter: (v: StatusFilter) => void
   priorityFilter: PriorityFilter
   onPriorityFilter: (v: PriorityFilter) => void
   viewMode: ViewMode
@@ -15,15 +13,19 @@ interface TaskViewToolbarProps {
   onCreateClick: () => void
   filterOpen: boolean
   onFilterOpenChange: (open: boolean) => void
-}
+  /** Merged onto the root toolbar row (Figma: full width on mobile). */
+  className?: string
+  /** Hide “Create task” (e.g. on Completed-only view). */
+  showCreateTask?: boolean
+}>
 
 function ListIcon({ active }: { active: boolean }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M2 4h12M2 8h12M2 12h8"
+        d="M4 6h16M4 12h16M4 18h16"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
         opacity={active ? 1 : 0.45}
       />
@@ -42,11 +44,17 @@ function CardIcon({ active }: { active: boolean }) {
   )
 }
 
+function PlusIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0 opacity-95">
+      <path d="M8 3.5v9M3.5 8h9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function TaskViewToolbar({
   search,
   onSearchChange,
-  statusFilter,
-  onStatusFilter,
   priorityFilter,
   onPriorityFilter,
   viewMode,
@@ -54,10 +62,12 @@ export function TaskViewToolbar({
   onCreateClick,
   filterOpen,
   onFilterOpenChange,
+  className = '',
+  showCreateTask = true,
 }: TaskViewToolbarProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
 
-  const hasActiveFilters = statusFilter !== 'all' || priorityFilter !== 'all'
+  const hasActiveFilters = priorityFilter !== 'all'
 
   useEffect(() => {
     if (!filterOpen) return
@@ -71,90 +81,71 @@ export function TaskViewToolbar({
   }, [filterOpen, onFilterOpenChange])
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex h-[34px] min-w-[160px] flex-1 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
-        <span className="flex shrink-0 text-[var(--text-muted)]" aria-hidden>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.25" />
-            <path d="M9 9l3.5 3.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-          </svg>
-        </span>
+    <div
+      className={`flex flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-3 ${className}`.trim()}
+    >
+      <div className="relative min-w-0 flex-1 sm:max-w-none sm:w-64">
+        <svg
+          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
         <label htmlFor="task-search" className="sr-only">
           Search tasks
         </label>
         <input
           id="task-search"
           type="search"
-          className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[0.8125rem] outline-none placeholder:text-[var(--text-muted)] placeholder:opacity-85"
-          placeholder="Search title or description…"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--search-bg)] py-2 pl-10 pr-4 text-xs outline-none transition placeholder:text-[var(--text-muted)] placeholder:opacity-85 focus:border-[var(--accent)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent)_25%,transparent)]"
+          placeholder="Search title or description..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           autoComplete="off"
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
         <div className="relative" ref={wrapRef}>
           <button
             type="button"
-            className={`inline-flex h-[34px] items-center gap-1.5 rounded-md border bg-[var(--surface-elevated)] px-2.5 text-[0.8125rem] font-medium transition hover:border-[var(--border-strong)] hover:text-[var(--text)] ${
-              filterOpen
-                ? 'border-[var(--accent)] text-[var(--text)] ring-2 ring-[var(--accent-soft)]'
-                : 'border-[var(--border)] text-[var(--text-muted)]'
-            } ${hasActiveFilters ? 'text-[var(--text)]' : ''}`}
+            aria-label={filterOpen ? 'Close filters' : 'Open filters'}
             aria-expanded={filterOpen}
             aria-haspopup="true"
             aria-controls="filter-popover"
             onClick={() => onFilterOpenChange(!filterOpen)}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl border bg-[var(--search-bg)] text-[var(--text-muted)] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-[color-mix(in_srgb,var(--surface-elevated)_70%,transparent)] dark:hover:bg-[var(--surface-elevated)] ${
+              filterOpen || hasActiveFilters
+                ? 'border-[color-mix(in_srgb,var(--accent)_42%,var(--border))] bg-[var(--accent-soft)] text-[var(--accent)]'
+                : 'border-[var(--border)]'
+            }`}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               <path
-                d="M2 3.5h10M4.5 7h5M6 10.5h2"
-                stroke="currentColor"
-                strokeWidth="1.25"
                 strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
               />
             </svg>
-            Filter
-            {hasActiveFilters && (
-              <span className="ml-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" aria-hidden />
-            )}
+            {hasActiveFilters ? (
+              <span className="sr-only">Filters active</span>
+            ) : null}
           </button>
           {filterOpen && (
             <div
               id="filter-popover"
-              className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 shadow-[var(--shadow-lg)]"
+              className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[232px] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-3 shadow-[var(--shadow-lg)]"
               role="dialog"
               aria-label="Filter tasks"
             >
-              <div className="px-2">
-                <span className="block px-2 pb-1 pt-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                  Status
-                </span>
-                <div className="flex flex-col gap-0.5" role="group">
-                  {(
-                    [
-                      ['all', 'All'],
-                      ['pending', 'Pending'],
-                      ['completed', 'Completed'],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`w-full rounded-md px-2 py-1.5 text-left text-[0.8125rem] font-medium transition hover:bg-[var(--surface-elevated)] ${
-                        statusFilter === value
-                          ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
-                          : 'text-[var(--text)]'
-                      }`}
-                      onClick={() => onStatusFilter(value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="my-2 h-px bg-[var(--border)]" />
               <div className="px-2">
                 <span className="block px-2 pb-1 pt-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                   Priority
@@ -171,7 +162,7 @@ export function TaskViewToolbar({
                     <button
                       key={value}
                       type="button"
-                      className={`w-full rounded-md px-2 py-1.5 text-left text-[0.8125rem] font-medium transition hover:bg-[var(--surface-elevated)] ${
+                      className={`w-full rounded-xl px-3 py-2 text-left text-[0.8125rem] font-medium transition hover:bg-[var(--surface-elevated)] ${
                         priorityFilter === value
                           ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                           : 'text-[var(--text)]'
@@ -187,46 +178,46 @@ export function TaskViewToolbar({
           )}
         </div>
 
-        <div
-          className="inline-flex rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-0.5"
-          role="group"
-          aria-label="View mode"
+        <button
+          type="button"
+          title="List view"
+          aria-pressed={viewMode === 'list'}
+          aria-label="List view"
+          onClick={() => onViewMode('list')}
+          className={`flex h-9 w-9 items-center justify-center rounded-xl border text-[var(--accent)] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition ${
+            viewMode === 'list'
+              ? 'border-[color-mix(in_srgb,var(--accent)_35%,var(--border))] bg-[var(--accent-soft)]'
+              : 'border-[var(--border)] bg-[var(--search-bg)] text-[var(--text-muted)] hover:bg-[var(--surface-elevated)]'
+          }`}
         >
-          <button
-            type="button"
-            className={`flex h-[30px] w-8 items-center justify-center rounded transition ${
-              viewMode === 'list'
-                ? 'bg-[var(--surface)] text-[var(--accent)] shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-            }`}
-            onClick={() => onViewMode('list')}
-            title="List view"
-            aria-pressed={viewMode === 'list'}
-          >
-            <ListIcon active={viewMode === 'list'} />
-          </button>
-          <button
-            type="button"
-            className={`flex h-[30px] w-8 items-center justify-center rounded transition ${
-              viewMode === 'card'
-                ? 'bg-[var(--surface)] text-[var(--accent)] shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-            }`}
-            onClick={() => onViewMode('card')}
-            title="Card view"
-            aria-pressed={viewMode === 'card'}
-          >
-            <CardIcon active={viewMode === 'card'} />
-          </button>
-        </div>
+          <ListIcon active={viewMode === 'list'} />
+        </button>
 
         <button
           type="button"
-          className="inline-flex h-[34px] items-center justify-center rounded-md bg-[var(--accent)] px-3.5 text-[0.8125rem] font-semibold tracking-tight text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.98]"
-          onClick={onCreateClick}
+          title="Card view"
+          aria-pressed={viewMode === 'card'}
+          aria-label="Card view"
+          onClick={() => onViewMode('card')}
+          className={`flex h-9 w-9 items-center justify-center rounded-xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition ${
+            viewMode === 'card'
+              ? 'border-[color-mix(in_srgb,var(--accent)_35%,var(--border))] bg-[var(--accent-soft)] text-[var(--accent)]'
+              : 'border-[var(--border)] bg-[var(--search-bg)] text-[var(--text-muted)] hover:bg-[var(--surface-elevated)]'
+          }`}
         >
-          Create task
+          <CardIcon active={viewMode === 'card'} />
         </button>
+
+        {showCreateTask ? (
+          <button
+            type="button"
+            className="bg-cta-gradient inline-flex h-9 shrink-0 items-center gap-2 rounded-xl px-4 text-xs font-semibold text-white shadow-sm transition"
+            onClick={onCreateClick}
+          >
+            <PlusIcon />
+            Create task
+          </button>
+        ) : null}
       </div>
     </div>
   )

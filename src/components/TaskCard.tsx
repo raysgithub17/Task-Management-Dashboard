@@ -1,5 +1,6 @@
 import type { Task } from '../types/task'
 import { priorityBadgeClass } from '../lib/priorityStyles'
+import { TaskStatusDropdown } from './TaskStatusDropdown'
 
 function formatDueDate(iso: string): string {
   if (!iso) return '—'
@@ -17,79 +18,74 @@ function formatDueDate(iso: string): string {
 }
 
 interface TaskCardProps {
-  task: Task
-  onToggle: (id: string) => void
-  onEdit: (task: Task) => void
-  onDelete: (task: Task) => void
+  readonly task: Task
+  readonly onCompletedChange: (id: string, completed: boolean) => void
+  readonly onEdit: (task: Task) => void
+  readonly onDelete: (task: Task) => void
+  readonly onOpenDetails: (task: Task) => void
 }
 
-export function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps) {
-  const done = task.completed
-
+export function TaskCard({
+  task,
+  onCompletedChange,
+  onEdit,
+  onDelete,
+  onOpenDetails,
+}: Readonly<TaskCardProps>) {
   return (
     <article
-      className={`flex flex-col gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3.5 transition hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-lg)] ${done ? 'opacity-75' : ''}`}
+      className={`group relative flex flex-col gap-0 overflow-hidden rounded-r-2xl border border-[var(--border)] border-l-4 bg-[var(--surface)] p-5 pl-5 shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition hover:border-[color-mix(in_srgb,var(--accent)_18%,var(--border))] hover:shadow-[0_8px_30px_rgba(0,0,0,0.03)] ${
+        {
+          low: 'border-l-[var(--priority-low)]',
+          medium: 'border-l-[var(--priority-med)]',
+          high: 'border-l-[var(--priority-high)]',
+        }[task.priority]
+      }`}
     >
-      <header className="flex items-center justify-between">
-        <label className="relative flex cursor-pointer">
-          <input
-            type="checkbox"
-            className="peer sr-only"
-            checked={task.completed}
-            onChange={() => onToggle(task.id)}
-            aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
-          />
-          <span
-            className="flex h-5 w-5 shrink-0 rounded border-2 border-[var(--border-strong)] transition peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent)] peer-checked:border-[var(--accent)] peer-checked:bg-[var(--accent)] peer-checked:shadow-[inset_0_0_0_2px_var(--surface)]"
-            aria-hidden
-          />
-        </label>
-        <span
-          className={`rounded px-1.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide ${priorityBadgeClass[task.priority]}`}
-        >
-          {task.priority}
-        </span>
+      <header className="mb-3 flex items-start justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`shrink-0 ${priorityBadgeClass[task.priority]}`}>
+            {task.priority}
+          </span>
+          <TaskStatusDropdown variant="card" task={task} onCompletedChange={onCompletedChange} />
+        </div>
+        <div className="flex shrink-0 items-center gap-1 opacity-55 transition group-hover:opacity-100">
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs font-semibold text-[var(--text-muted)] transition hover:text-[var(--accent)]"
+            onClick={() => onEdit(task)}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs font-semibold text-[var(--danger)] transition hover:text-[color-mix(in_srgb,var(--danger)_85%,black)]"
+            onClick={() => onDelete(task)}
+          >
+            Delete
+          </button>
+        </div>
       </header>
-      <h3
-        className={`text-base font-semibold text-[var(--text)] ${done ? 'text-[var(--text-muted)] line-through' : ''}`}
+      <button
+        type="button"
+        className="mt-auto w-full min-h-0 flex-1 cursor-pointer rounded-xl py-0.5 text-left outline-none transition hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_40%,transparent)]"
+        onClick={() => onOpenDetails(task)}
+        aria-label={`View details: ${task.title}`}
       >
-        {task.title}
-      </h3>
-      {task.description ? (
-        <p className={`flex-1 text-sm leading-snug text-[var(--text-muted)] ${done ? 'line-through' : ''}`}>
-          {task.description}
-        </p>
-      ) : (
-        <p className="flex-1 text-sm italic text-[var(--text-muted)]">No description</p>
-      )}
-      <footer className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
-        <span className="text-xs font-medium text-[var(--text-muted)]">{formatDueDate(task.dueDate)}</span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[0.7rem] font-semibold ${
-            done
-              ? 'bg-[var(--success-soft)] text-[var(--success)]'
-              : 'bg-[var(--warning)] text-[#09090b]'
-          }`}
-        >
-          {done ? 'Completed' : 'Pending'}
-        </span>
-      </footer>
-      <div className="flex gap-1 border-t border-[var(--border)] pt-2">
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold text-[var(--text-muted)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
-          onClick={() => onEdit(task)}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold text-[var(--text-muted)] transition hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-          onClick={() => onDelete(task)}
-        >
-          Delete
-        </button>
-      </div>
+        <h3 title={task.title} className="line-clamp-2 text-sm font-bold leading-snug text-[var(--text)]">
+          {task.title}
+        </h3>
+        {task.description ? (
+          <p title={task.description} className="mt-2 line-clamp-3 text-xs leading-relaxed text-[var(--text-muted)]">
+            {task.description}
+          </p>
+        ) : (
+          <p className="mt-2 text-xs italic text-[var(--text-muted)]">No description</p>
+        )}
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[color-mix(in_srgb,var(--border)_70%,transparent)] pt-3">
+          <span className="text-[0.8125rem] font-medium text-[var(--text-muted)]">{formatDueDate(task.dueDate)}</span>
+        </div>
+      </button>
     </article>
   )
 }

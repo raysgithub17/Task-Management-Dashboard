@@ -13,6 +13,7 @@ A simple task board built with **React** and **TypeScript**. You can add, edit, 
 | Topic | Section |
 |--------|---------|
 | Hosted app | [Live demo](#live-demo) |
+| AI insights (Hugging Face) | [AI insights](#ai-insights-hugging-face) |
 | How to install and run the app | [Setup](#setup) |
 | Pictures of the UI | [Screenshots](#screenshots) |
 | Why things are built this way | [Design decisions](#design-decisions) |
@@ -21,10 +22,28 @@ A simple task board built with **React** and **TypeScript**. You can add, edit, 
 
 ---
 
+## AI insights (Hugging Face)
+
+The **AI overview** panel summarizes your current task list and suggests what to focus on next. It calls the [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/en/index) OpenAI-compatible router (`/v1/chat/completions`).
+
+**Setup**
+
+1. Create a token at [Hugging Face Settings → Access Tokens](https://huggingface.co/settings/tokens) with permission to **make calls to Inference Providers**.
+2. Copy [`.env.example`](.env.example) to `.env` and set `HF_ACCESS_TOKEN=hf_...`.
+
+**Important:** The token is injected by the **Vite dev server proxy** only (see [`vite.config.ts`](vite.config.ts)). It is **not** embedded in the client bundle. Run `npm run dev` locally to use AI insights. A static deploy (e.g. Netlify) has no proxy unless you add your own backend.
+
+The app picks a chat model Hugging Face can route through **your enabled Inference Providers** (see [Inference Provider settings](https://huggingface.co/settings/inference-providers)): it starts with `openai/gpt-oss-120b:preferred` (suffix `:preferred` = use your preferred-provider order), then automatically tries other models if you get errors like “not supported by any provider you have enabled”.
+
+Optional: set `VITE_HF_CHAT_MODEL` in `.env` to a specific model id (you can append `:groq`, `:fastest`, etc., as in the [Inference Providers docs](https://huggingface.co/docs/inference-providers/en/index)).
+
+---
+
 ## Table of contents
 
 - [Live demo](#live-demo)
 - [What you’ll find here](#what-youll-find-here)
+- [AI insights (Hugging Face)](#ai-insights-hugging-face)
 - [Setup](#setup)
 - [Screenshots](#screenshots)
 - [Design decisions](#design-decisions)
@@ -154,6 +173,9 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
 9. **Static hosting**  
    The production build is plain HTML/CSS/JS in `dist/`. [`netlify.toml`](netlify.toml) and [`public/_redirects`](public/_redirects) configure the Netlify deploy (build command, output folder, and SPA routing so refreshes keep working).
 
+10. **AI via dev proxy**  
+   Optional insights use `HF_ACCESS_TOKEN` only on the dev server: requests go to `/hf-api/...` and Vite forwards them to `https://router.huggingface.co` with the `Authorization` header. That keeps the token out of the browser build.
+
 ---
 
 ## Technical stack
@@ -176,6 +198,8 @@ These images live in **`docs/Screenshots/`** so they show up when you view this 
 - **Filter** by status (all / pending / done) and by priority
 - **List** or **card** layout
 - **Counters** for total, pending, and completed tasks
+- **AI overview** (dev): Hugging Face chat summarization and recommendations from your task list
+- **Enhance with AI** on create/edit: polish title and description (same Hugging Face proxy as insights)
 - **Light** and **dark** theme, remembered when you come back
 - Layout that works on **large and small** screens
 
