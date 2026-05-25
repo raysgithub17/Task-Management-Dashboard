@@ -88,6 +88,7 @@ export function TaskViewToolbar({
   className = '',
   showCreateTask = true,
 }: TaskViewToolbarProps) {
+  const searchRef = useRef<HTMLInputElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const [panelPos, setPanelPos] = useState<PopoverMetrics | null>(null)
@@ -206,14 +207,30 @@ export function TaskViewToolbar({
           Search tasks
         </label>
         <input
+          ref={searchRef}
           id="task-search"
-          type="search"
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--search-bg)] py-2 pl-10 pr-4 text-xs outline-none transition placeholder:text-[var(--text-muted)] placeholder:opacity-85 focus:border-[var(--accent)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent)_25%,transparent)]"
+          type="text"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--search-bg)] py-2 pl-10 pr-10 text-xs outline-none transition placeholder:text-[var(--text-muted)] placeholder:opacity-85 focus:border-[var(--accent)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent)_25%,transparent)]"
           placeholder="Search title or description..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           autoComplete="off"
         />
+        {search ? (
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-elevated)] hover:text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent)_35%,transparent)]"
+            aria-label="Clear search"
+            onClick={() => {
+              onSearchChange('')
+              searchRef.current?.focus()
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
+            </svg>
+          </button>
+        ) : null}
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
