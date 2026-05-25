@@ -40,12 +40,12 @@ export function TaskDetailsModal({ task, onClose, onEdit, onCompletedChange }: T
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[3px]"
+      className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/50 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur-[3px]"
       role="presentation"
       onClick={onClose}
     >
       <div
-        className="flex min-h-0 w-full max-w-[500px] max-h-[min(90dvh,calc(100dvh-2rem))] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-lg)] ring-1 ring-black/[0.06] dark:ring-white/[0.08]"
+        className="my-auto flex h-[min(92dvh,calc(100svh-2.5rem))] w-full max-w-[500px] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-lg)] ring-1 ring-black/[0.06] dark:ring-white/[0.08]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-details-title"

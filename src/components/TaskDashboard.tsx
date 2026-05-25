@@ -106,6 +106,7 @@ export function TaskDashboard() {
   }, [detailsTask, tasks])
 
   const addedThisWeek = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity -- wall-clock cutoff for "+N this week"; no ticking clock subscription needed
     const cutoff = Date.now() - 7 * 86400000
     return tasks.filter((t) => t.createdAt >= cutoff).length
   }, [tasks])
@@ -237,7 +238,7 @@ export function TaskDashboard() {
             type="button"
             className={
               theme === 'dark'
-                ? 'inline-flex shrink-0 items-center gap-2 self-start rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-[var(--text)] shadow-sm transition hover:bg-[var(--surface-elevated)] sm:self-auto'
+                ? 'inline-flex shrink-0 items-center gap-2 self-start rounded-xl border border-slate-200/85 bg-white px-4 py-2 text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:self-auto'
                 : 'inline-flex shrink-0 items-center gap-2 self-start rounded-xl bg-[var(--theme-toggle-bg)] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--theme-toggle-hover)] sm:self-auto'
             }
             onClick={toggleTheme}

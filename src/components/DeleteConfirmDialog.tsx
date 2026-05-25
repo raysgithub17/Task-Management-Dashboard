@@ -11,12 +11,12 @@ export function DeleteConfirmDialog({ task, onCancel, onConfirm }: DeleteConfirm
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[3px]"
+      className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/50 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur-[3px]"
       role="presentation"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-[400px] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-lg)] ring-1 ring-black/[0.06] dark:ring-white/[0.08]"
+        className="my-auto w-full max-w-[400px] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-lg)] ring-1 ring-black/[0.06] dark:ring-white/[0.08]"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="delete-title"

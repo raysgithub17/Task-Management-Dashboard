@@ -1,7 +1,30 @@
-import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { PriorityFilter } from '../types/task'
 
 type ViewMode = 'list' | 'card'
+
+type PopoverMetrics = Readonly<{
+  top: number
+  left: number
+  width: number
+  maxHeight: number
+}>
+
+function computeFilterPopoverPosition(btn: HTMLElement): PopoverMetrics {
+  const pad = 12
+  const r = btn.getBoundingClientRect()
+  const vw = window.visualViewport?.width ?? window.innerWidth
+  const vh = window.visualViewport?.height ?? window.innerHeight
+  const vTop = window.visualViewport?.offsetTop ?? 0
+  const usableBottom = vTop + vh
+  const maxW = Math.min(272, vw - pad * 2)
+  const left = Math.min(Math.max(pad, r.right - maxW), vw - pad - maxW)
+  const top = r.bottom + 8
+  const maxHeight = Math.max(168, Math.min(420, usableBottom - top - pad))
+
+  return { top, left, width: maxW, maxHeight }
+}
 
 type TaskViewToolbarProps = Readonly<{
   search: string
@@ -65,20 +88,100 @@ export function TaskViewToolbar({
   className = '',
   showCreateTask = true,
 }: TaskViewToolbarProps) {
-  const wrapRef = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [panelPos, setPanelPos] = useState<PopoverMetrics | null>(null)
 
   const hasActiveFilters = priorityFilter !== 'all'
+
+  useLayoutEffect(() => {
+    if (!filterOpen) return
+
+    const update = () => {
+      const el = btnRef.current
+      if (el) setPanelPos(computeFilterPopoverPosition(el))
+    }
+
+    let raf = 0
+    raf = requestAnimationFrame(update)
+
+    const vv = window.visualViewport
+    vv?.addEventListener('resize', update)
+    vv?.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      vv?.removeEventListener('resize', update)
+      vv?.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [filterOpen])
 
   useEffect(() => {
     if (!filterOpen) return
     const onDoc = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        onFilterOpenChange(false)
-      }
+      const t = e.target as Node
+      if (btnRef.current?.contains(t)) return
+      if (panelRef.current?.contains(t)) return
+      onFilterOpenChange(false)
     }
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
   }, [filterOpen, onFilterOpenChange])
+
+  const filterPanel =
+    filterOpen && panelPos ?
+      createPortal(
+        <div
+          ref={panelRef}
+          id="filter-popover"
+          role="dialog"
+          aria-label="Filter tasks"
+          aria-modal="true"
+          className="overflow-y-auto overscroll-contain rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-3 shadow-[var(--shadow-lg)]"
+          style={{
+            position: 'fixed',
+            top: panelPos.top,
+            left: panelPos.left,
+            width: panelPos.width,
+            maxHeight: panelPos.maxHeight,
+            zIndex: 1700,
+          }}
+        >
+          <div className="px-2">
+            <span className="block px-2 pb-1 pt-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              Priority
+            </span>
+            <div className="flex flex-col gap-0.5" role="group">
+              {(
+                [
+                  ['all', 'All'],
+                  ['low', 'Low'],
+                  ['medium', 'Medium'],
+                  ['high', 'High'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`w-full rounded-xl px-3 py-2 text-left text-[0.8125rem] font-medium transition hover:bg-[var(--surface-elevated)] ${
+                    priorityFilter === value ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text)]'
+                  }`}
+                  onClick={() => {
+                    onPriorityFilter(value)
+                    onFilterOpenChange(false)
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null
 
   return (
     <div
@@ -114,8 +217,9 @@ export function TaskViewToolbar({
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <div className="relative" ref={wrapRef}>
+        <div className="relative">
           <button
+            ref={btnRef}
             type="button"
             aria-label={filterOpen ? 'Close filters' : 'Open filters'}
             aria-expanded={filterOpen}
@@ -135,48 +239,11 @@ export function TaskViewToolbar({
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
               />
             </svg>
-            {hasActiveFilters ? (
-              <span className="sr-only">Filters active</span>
-            ) : null}
+            {hasActiveFilters ? <span className="sr-only">Filters active</span> : null}
           </button>
-          {filterOpen && (
-            <div
-              id="filter-popover"
-              className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[232px] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-3 shadow-[var(--shadow-lg)]"
-              role="dialog"
-              aria-label="Filter tasks"
-            >
-              <div className="px-2">
-                <span className="block px-2 pb-1 pt-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                  Priority
-                </span>
-                <div className="flex flex-col gap-0.5" role="group">
-                  {(
-                    [
-                      ['all', 'All'],
-                      ['low', 'Low'],
-                      ['medium', 'Medium'],
-                      ['high', 'High'],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`w-full rounded-xl px-3 py-2 text-left text-[0.8125rem] font-medium transition hover:bg-[var(--surface-elevated)] ${
-                        priorityFilter === value
-                          ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
-                          : 'text-[var(--text)]'
-                      }`}
-                      onClick={() => onPriorityFilter(value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+
+        {filterPanel}
 
         <button
           type="button"
@@ -208,7 +275,7 @@ export function TaskViewToolbar({
           <CardIcon active={viewMode === 'card'} />
         </button>
 
-        {showCreateTask ? (
+        {showCreateTask ?
           <button
             type="button"
             className="bg-cta-gradient inline-flex h-9 shrink-0 items-center gap-2 rounded-xl px-4 text-xs font-semibold text-white shadow-sm transition"
@@ -217,7 +284,7 @@ export function TaskViewToolbar({
             <PlusIcon />
             Create task
           </button>
-        ) : null}
+        : null}
       </div>
     </div>
   )
